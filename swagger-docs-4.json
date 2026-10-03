@@ -1,0 +1,1858 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "Snapp Box API",
+      "version": "1.0.0",
+      "description": "API reference for external partners building clients against the Snapp Box gateway."
+    },
+    "servers": [
+      {
+        "url": "https://{host}",
+        "variables": {
+          "host": {
+            "default": "api.snappbox.ir",
+            "description": "Contact SnappBox Support to obtain the correct Base URL"
+          }
+        }
+      }
+    ],
+    "tags": [
+      {
+        "name": "Authentication"
+      },
+      {
+        "name": "Orders v1"
+      },
+      {
+        "name": "Orders v2"
+      },
+      {
+        "name": "NXP v1"
+      },
+      {
+        "name": "Customers & Addresses"
+      },
+      {
+        "name": "Wallets & Insurance"
+      }
+    ],
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/v1/oauth2/token": {
+        "post": {
+          "tags": [
+            "Authentication"
+          ],
+          "summary": "Exchange client credentials for an access token",
+          "description": "No auth header needed for this one call.",
+          "security": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": {
+                      "type": "string",
+                      "description": "Your issued client ID"
+                    },
+                    "client_secret": {
+                      "type": "string",
+                      "description": "Your issued client secret"
+                    }
+                  },
+                  "required": [
+                    "client_id",
+                    "client_secret"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Token response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "access_token": {
+                        "type": "string"
+                      },
+                      "token_type": {
+                        "type": "string"
+                      },
+                      "expires_in": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/delivery-categories": {
+        "get": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "List delivery categories available for a location",
+          "parameters": [
+            {
+              "name": "latitude",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "number"
+              }
+            },
+            {
+              "name": "longitude",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "number"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of categories",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "city": {
+                        "type": "string"
+                      },
+                      "deliveryCategories": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/pricing": {
+        "post": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Get a price quote for a standard order",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string"
+                    },
+                    "deliveryCategory": {
+                      "type": "string"
+                    },
+                    "hasReturn": {
+                      "type": "boolean"
+                    },
+                    "packages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "dropoffReference": {
+                            "type": "string"
+                          },
+                          "insuranceId": {
+                            "type": "integer"
+                          },
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "packageValue": {
+                                  "type": "number"
+                                },
+                                "quantity": {
+                                  "type": "integer"
+                                },
+                                "quantityMeasuringUnit": {
+                                  "type": "string"
+                                },
+                                "volume": {
+                                  "type": "number"
+                                },
+                                "weight": {
+                                  "type": "number"
+                                }
+                              }
+                            }
+                          },
+                          "pickupReference": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "paymentType": {
+                      "type": "string",
+                      "enum": [
+                        "prepaid",
+                        "cod",
+                        "postpaid"
+                      ]
+                    },
+                    "sequenceNumberDeliveryCollection": {
+                      "type": "integer"
+                    },
+                    "terminals": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Terminal"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Pricing quote",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "totalFare": {
+                        "type": "number"
+                      },
+                      "finalCustomerFare": {
+                        "type": "number"
+                      },
+                      "distance": {
+                        "type": "number"
+                      },
+                      "eta": {
+                        "type": "integer"
+                      },
+                      "pricingId": {
+                        "type": "string"
+                      },
+                      "onDemandBiddingEnabled": {
+                        "type": "boolean"
+                      },
+                      "scheduledBiddingEnabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders": {
+        "post": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Create a new delivery order",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "refId": {
+                      "type": "string",
+                      "description": "Your unique business reference (idempotency key)"
+                    },
+                    "terminals": {
+                      "type": "array",
+                      "description": "Pickup + dropoff stops. At least two elements.",
+                      "items": {
+                        "$ref": "#/components/schemas/Terminal"
+                      }
+                    },
+                    "deliveryCategory": {
+                      "type": "string"
+                    },
+                    "paymentType": {
+                      "type": "string",
+                      "enum": [
+                        "prepaid",
+                        "cod",
+                        "postpaid"
+                      ]
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "packages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "totalPackageSize": {
+                      "type": "number"
+                    },
+                    "waitingTime": {
+                      "type": "integer"
+                    },
+                    "voucherCode": {
+                      "type": "string"
+                    },
+                    "hasReturn": {
+                      "type": "boolean"
+                    },
+                    "startTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "endTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "podEnabled": {
+                      "type": "boolean"
+                    },
+                    "popEnabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "refId",
+                    "terminals",
+                    "deliveryCategory",
+                    "paymentType"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Order created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "orderId": {
+                        "type": "string"
+                      },
+                      "refId": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "price": {
+                        "type": "number"
+                      },
+                      "createdTime": {
+                        "type": "string"
+                      },
+                      "terminalIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/{orderId}": {
+        "get": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Get full order detail",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "put": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Update an existing order",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "paymentType": {
+                      "type": "string"
+                    },
+                    "waitingTime": {
+                      "type": "integer"
+                    },
+                    "terminals": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Terminal"
+                      }
+                    },
+                    "packages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "Order updated successfully"
+            }
+          }
+        },
+        "delete": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Cancel an order",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "Order cancelled successfully"
+            }
+          }
+        }
+      },
+      "/v1/orders/references/{refId}": {
+        "get": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Get full order detail by refId",
+          "parameters": [
+            {
+              "name": "refId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/list": {
+        "get": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "List your orders",
+          "parameters": [
+            {
+              "name": "status",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "pageNumber",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "name": "pageSize",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Array of order details",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/{orderId}/current-location": {
+        "get": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Live driver location for an active order",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Driver location",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "latitude": {
+                        "type": "number"
+                      },
+                      "longitude": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/{orderId}/events": {
+        "get": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Full event history of the order",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Event history",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "actionAt": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/verify": {
+        "post": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Verify an order event",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "orderId": {
+                      "type": "string"
+                    },
+                    "customerRefId": {
+                      "type": "string"
+                    },
+                    "verificationType": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "orderId",
+                    "customerRefId",
+                    "verificationType"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "Order verified"
+            }
+          }
+        }
+      },
+      "/v1/orders/verify/picked-up/{refId}": {
+        "post": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Shortcut: mark an order as verified-picked-up using your refId",
+          "parameters": [
+            {
+              "name": "refId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "204": {
+              "description": "Order marked picked-up"
+            }
+          }
+        }
+      },
+      "/v1/customers/verify-pickup-code": {
+        "post": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Verify a pickup code handed to the driver",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pickupCode": {
+                      "type": "string"
+                    },
+                    "terminalId": {
+                      "type": "string"
+                    },
+                    "customerRefId": {
+                      "type": "string"
+                    },
+                    "orderId": {
+                      "type": "string",
+                      "description": "Required only if customerRefId is not sent"
+                    },
+                    "referenceOrderId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "pickupCode",
+                    "terminalId"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Pickup code verified"
+            }
+          }
+        }
+      },
+      "/v1/orders/number-masking": {
+        "post": {
+          "tags": [
+            "Orders v1"
+          ],
+          "summary": "Apply phone number masking on an order terminal",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "orderId": {
+                      "type": "string"
+                    },
+                    "terminalId": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "orderId",
+                    "terminalId"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "Number masking applied"
+            }
+          }
+        }
+      },
+      "/v2/orders": {
+        "post": {
+          "tags": [
+            "Orders v2"
+          ],
+          "summary": "Create an order (Classic or Same-day)",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "refId": {
+                      "type": "string",
+                      "description": "Required for Same-day"
+                    },
+                    "terminals": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Terminal"
+                      }
+                    },
+                    "deliveryCategory": {
+                      "type": "string"
+                    },
+                    "paymentType": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "timeSlot": {
+                      "type": "object"
+                    },
+                    "packages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "features": {
+                      "type": "object"
+                    },
+                    "totalPackageSize": {
+                      "type": "number"
+                    },
+                    "waitingTime": {
+                      "type": "integer"
+                    },
+                    "voucherCode": {
+                      "type": "string"
+                    },
+                    "hasReturn": {
+                      "type": "boolean"
+                    },
+                    "startTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "endTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "podEnabled": {
+                      "type": "boolean"
+                    },
+                    "popEnabled": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "terminals",
+                    "deliveryCategory",
+                    "paymentType"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Order created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v2/orders/{orderId}": {
+        "get": {
+          "tags": [
+            "Orders v2"
+          ],
+          "summary": "Get full order detail by platform order ID",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v2/orders/references/{refId}": {
+        "get": {
+          "tags": [
+            "Orders v2"
+          ],
+          "summary": "Get order detail by your reference ID",
+          "parameters": [
+            {
+              "name": "refId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/sdd/timelines": {
+        "post": {
+          "tags": [
+            "Orders v2"
+          ],
+          "summary": "Returns the time slots you can pick for pickup and delivery on the same day",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "parcels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "sender_terminal_id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "parcels",
+                    "sender_terminal_id"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Available timelines",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/sizes/{delivery_type}": {
+        "get": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "List parcel sizes for a delivery type",
+          "parameters": [
+            {
+              "name": "delivery_type",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of sizes",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/timelines": {
+        "post": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Search available time slots for standard delivery",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "parcels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "size": {
+                            "$ref": "#/components/schemas/Size"
+                          },
+                          "sender_terminal_id": {
+                            "type": "string"
+                          },
+                          "receiver_terminal": {
+                            "type": "object"
+                          },
+                          "receiver_terminal_id": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "size",
+                          "sender_terminal_id"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "parcels"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Timelines",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/bundles": {
+        "get": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "List your bundles",
+          "parameters": [
+            {
+              "name": "bundle_status",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "sender_terminal_id",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "name": "page_size",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of bundles",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/orders/invoice": {
+        "post": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Get a price quote and token for NXP order",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reference": {
+                      "type": "string"
+                    },
+                    "parcels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Pricing and invoice token",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "total": {
+                        "type": "number"
+                      },
+                      "base_price": {
+                        "type": "number"
+                      },
+                      "first_mile": {
+                        "type": "number"
+                      },
+                      "mid_mile": {
+                        "type": "number"
+                      },
+                      "last_mile": {
+                        "type": "number"
+                      },
+                      "discount": {
+                        "type": "number"
+                      },
+                      "insurance": {
+                        "type": "number"
+                      },
+                      "tax": {
+                        "type": "number"
+                      },
+                      "reference": {
+                        "type": "string"
+                      },
+                      "token": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/orders": {
+        "post": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Create the order",
+          "parameters": [
+            {
+              "name": "X-Idempotency-Key",
+              "in": "header",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "invoice_token": {
+                      "type": "string"
+                    },
+                    "parcels": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "timeline_id": {
+                            "type": "string"
+                          },
+                          "sender_terminal_id": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "$ref": "#/components/schemas/Size"
+                          },
+                          "receiver_terminal": {
+                            "type": "object"
+                          },
+                          "receiver_terminal_id": {
+                            "type": "string"
+                          },
+                          "pickup_type": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "integer"
+                          },
+                          "breakable": {
+                            "type": "boolean"
+                          },
+                          "packaging": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "timeline_id",
+                          "sender_terminal_id",
+                          "size"
+                        ]
+                      }
+                    },
+                    "reference": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "invoice_token",
+                    "parcels"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Order created",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Search your sender orders with filters and pagination",
+          "parameters": [
+            {
+              "name": "statuses",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "name": "page_size",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of orders",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/orders/{orderId}/transactions": {
+        "post": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Pay the order from your Snapp Box wallet",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Transaction status",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      },
+                      "paid": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/parcels": {
+        "get": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Search parcels with filters",
+          "parameters": [
+            {
+              "name": "tracking_code",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of parcels",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/parcels/labels": {
+        "get": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Download parcel barcode labels as an HTML page",
+          "parameters": [
+            {
+              "name": "order_id",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "HTML Labels",
+              "content": {
+                "text/html": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/parcels/{id}": {
+        "delete": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "Cancel a sender parcel",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reason_id": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": {
+              "description": "Parcel cancelled"
+            }
+          }
+        }
+      },
+      "/v1/nxp/transactions": {
+        "get": {
+          "tags": [
+            "NXP v1"
+          ],
+          "summary": "List payment transactions with filters",
+          "parameters": [
+            {
+              "name": "order_id",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of transactions",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/customers/favorite-address": {
+        "post": {
+          "tags": [
+            "Customers & Addresses"
+          ],
+          "summary": "Save a new favorite address",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "contactName": {
+                      "type": "string"
+                    },
+                    "contactPhoneNumber": {
+                      "type": "string"
+                    },
+                    "latitude": {
+                      "type": "string"
+                    },
+                    "longitude": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "plate": {
+                      "type": "string"
+                    },
+                    "unit": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    },
+                    "defaultAddress": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "contactName",
+                    "contactPhoneNumber",
+                    "latitude",
+                    "longitude",
+                    "address"
+                  ]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Favorite address saved",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "tags": [
+            "Customers & Addresses"
+          ],
+          "summary": "List saved favorite addresses",
+          "responses": {
+            "200": {
+              "description": "List of favorite addresses",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/wallets": {
+        "get": {
+          "tags": [
+            "Wallets & Insurance"
+          ],
+          "summary": "Get your current wallet balance",
+          "responses": {
+            "200": {
+              "description": "Wallet balance",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "balance": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/insurances": {
+        "get": {
+          "tags": [
+            "Wallets & Insurance"
+          ],
+          "summary": "List available insurance options",
+          "parameters": [
+            {
+              "name": "city",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "deliveryCategory",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Insurance options",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "city": {
+                        "type": "string"
+                      },
+                      "deliveryCategory": {
+                        "type": "string"
+                      },
+                      "packageValues": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "number"
+                            },
+                            "insuranceAmount": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer"
+        }
+      },
+      "schemas": {
+        "Terminal": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "string"
+            },
+            "longitude": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "reference": {
+              "type": "string"
+            },
+            "phoneNumber": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string"
+            },
+            "contactName": {
+              "type": "string"
+            },
+            "comment": {
+              "type": "string"
+            },
+            "hasPickupCode": {
+              "type": "boolean"
+            },
+            "status": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "latitude",
+            "longitude",
+            "type",
+            "reference",
+            "phoneNumber"
+          ]
+        },
+        "Order": {
+          "type": "object",
+          "properties": {
+            "orderId": {
+              "type": "string"
+            },
+            "refId": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "deliveryCategory": {
+              "type": "string"
+            },
+            "paymentType": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "canCancel": {
+              "type": "boolean"
+            },
+            "trackingUrl": {
+              "type": "string"
+            },
+            "createdTime": {
+              "type": "string"
+            },
+            "updatedTime": {
+              "type": "string"
+            },
+            "terminals": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "allotment": {
+              "type": "object"
+            }
+          }
+        },
+        "Size": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ]
+        },
+        "ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "statusCode": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }

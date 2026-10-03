@@ -1,0 +1,443 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Snapp Box Integration Gateway API",
+    "version": "1.0.0",
+    "description": "Integration guide for external partners building clients against the Snapp Box gateway."
+  },
+  "servers": [
+    {
+      "url": "https://"
+    }
+  ],
+  "paths": {
+    "/v1/oauth2/token": {
+      "post": {
+        "summary": "Get access token",
+        "description": "Exchange client credentials for an access token. No auth header needed.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["client_id", "client_secret"],
+                "properties": {
+                  "client_id": {
+                    "type": "string",
+                    "description": "Your issued client ID"
+                  },
+                  "client_secret": {
+                    "type": "string",
+                    "description": "Your issued client secret"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "token_type": { "type": "string" },
+                    "expires_in": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orders/delivery-categories": {
+      "get": {
+        "summary": "List delivery categories",
+        "description": "List delivery categories available for a location.",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number" },
+            "example": 35.757523
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "number" },
+            "example": 51.409911
+          }
+        ],
+        "responses": {
+          "200": { "description": "Successful response" }
+        },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/pricing": {
+      "post": {
+        "summary": "Get price quote (v1)",
+        "description": "Get a price quote for a standard order before creating it.",
+        "responses": {
+          "200": { "description": "Successful response" }
+        },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v2/pricing": {
+      "post": {
+        "summary": "Get price quote (v2)",
+        "description": "Pricing endpoint for the v2 order flow.",
+        "responses": {
+          "200": { "description": "Successful response" }
+        },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders": {
+      "post": {
+        "summary": "Create order (v1)",
+        "description": "Create a new standard delivery order.",
+        "responses": {
+          "201": { "description": "Order created" }
+        },
+        "security": [{ "BearerAuth": [] }]
+      },
+      "get": {
+        "summary": "List orders (v1)",
+        "description": "List your orders with pagination and optional status filter.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Successful response" }
+        },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders/{orderId}": {
+      "get": {
+        "summary": "Get order detail by ID (v1)",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      },
+      "put": {
+        "summary": "Update order (v1)",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "Updated successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      },
+      "delete": {
+        "summary": "Cancel order (v1)",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "Cancelled successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders/references/{refId}": {
+      "get": {
+        "summary": "Get order detail by refId (v1)",
+        "parameters": [
+          {
+            "name": "refId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders/{orderId}/current-location": {
+      "get": {
+        "summary": "Get live driver location",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders/{orderId}/events": {
+      "get": {
+        "summary": "Get order event history",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders/verify": {
+      "post": {
+        "summary": "Verify an order event",
+        "responses": { "204": { "description": "Verified successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders/verify/picked-up/{refId}": {
+      "post": {
+        "summary": "Verify picked-up via refId shortcut",
+        "parameters": [
+          {
+            "name": "refId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "Verified successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/customers/verify-pickup-code": {
+      "post": {
+        "summary": "Verify a pickup code",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/orders/number-masking": {
+      "post": {
+        "summary": "Apply phone number masking",
+        "responses": { "204": { "description": "Masking applied" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v2/orders": {
+      "post": {
+        "summary": "Create order (v2)",
+        "description": "Create an order (Classic or Same-day).",
+        "responses": { "201": { "description": "Created successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v2/orders/{orderId}": {
+      "get": {
+        "summary": "Get order detail by ID (v2)",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v2/orders/references/{refId}": {
+      "get": {
+        "summary": "Get order detail by refId (v2)",
+        "parameters": [
+          {
+            "name": "refId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/sdd/timelines": {
+      "post": {
+        "summary": "Get same-day timelines",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/sizes/{delivery_type}": {
+      "get": {
+        "summary": "List parcel sizes",
+        "parameters": [
+          {
+            "name": "delivery_type",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/timelines": {
+      "post": {
+        "summary": "Search standard timelines",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/bundles": {
+      "get": {
+        "summary": "List bundles",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/orders/invoice": {
+      "post": {
+        "summary": "Get NXP order invoice quote",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/orders": {
+      "post": {
+        "summary": "Create NXP sender order",
+        "responses": { "201": { "description": "Created successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      },
+      "get": {
+        "summary": "Search sender orders",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/orders/{orderId}/transactions": {
+      "post": {
+        "summary": "Pay NXP order from wallet",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/parcels": {
+      "get": {
+        "summary": "Search parcels",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/parcels/labels": {
+      "get": {
+        "summary": "Download parcel labels HTML",
+        "responses": { "200": { "description": "HTML page response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/parcels/{id}": {
+      "delete": {
+        "summary": "Cancel sender parcel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": { "204": { "description": "Cancelled successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/nxp/transactions": {
+      "get": {
+        "summary": "List payment transactions",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/customers/favorite-address": {
+      "post": {
+        "summary": "Save favorite address",
+        "responses": { "201": { "description": "Created successfully" } },
+        "security": [{ "BearerAuth": [] }]
+      },
+      "get": {
+        "summary": "List favorite addresses",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/wallets": {
+      "get": {
+        "summary": "Get wallet balance",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    },
+    "/v1/insurances": {
+      "get": {
+        "summary": "List available insurance options",
+        "responses": { "200": { "description": "Successful response" } },
+        "security": [{ "BearerAuth": [] }]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

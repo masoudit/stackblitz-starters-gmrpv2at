@@ -1,0 +1,487 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+      "title": "Snapp Box API Gateway",
+      "version": "1.0.0",
+      "description": "API documentation for Snapp Box integration gateway."
+    },
+    "servers": [
+      {
+        "url": "https://<HOST>"
+      }
+    ],
+    "tags": [
+      {
+        "name": "Authentication",
+        "description": "Authentication flow and token usage"
+      },
+      {
+        "name": "Orders v1",
+        "description": "Classic point-to-point delivery orders, pricing, verification, and customer endpoints"
+      },
+      {
+        "name": "Orders v2",
+        "description": "Same-day and Classic SnappBox v2 orders"
+      },
+      {
+        "name": "NXP v1",
+        "description": "Sender/parcel shipping flow, sizes, timelines, bundles, and invoices"
+      },
+      {
+        "name": "Customers & Addresses",
+        "description": "Favorite addresses and customer address book"
+      },
+      {
+        "name": "Wallets & Insurance",
+        "description": "Wallet balances and insurance options"
+      }
+    ],
+    "paths": {
+      "/v1/oauth2/token": {
+        "post": {
+          "tags": ["Authentication"],
+          "summary": "Get access token",
+          "description": "Exchange client credentials for an access token. No auth header needed.",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["client_id", "client_secret"],
+                  "properties": {
+                    "client_id": { "type": "string" },
+                    "client_secret": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "access_token": { "type": "string" },
+                      "token_type": { "type": "string" },
+                      "expires_in": { "type": "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/delivery-categories": {
+        "get": {
+          "tags": ["Orders v1"],
+          "summary": "List delivery categories",
+          "description": "List delivery categories available for a location.",
+          "parameters": [
+            { "name": "latitude", "in": "query", "required": true, "schema": { "type": "number" }, "example": 35.757523 },
+            { "name": "longitude", "in": "query", "required": true, "schema": { "type": "number" }, "example": 51.409911 }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/pricing": {
+        "post": {
+          "tags": ["Orders v1"],
+          "summary": "Get price quote (v1)",
+          "description": "Get a price quote for a standard order before creating it.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders": {
+        "post": {
+          "tags": ["Orders v1"],
+          "summary": "Create delivery order (v1)",
+          "description": "Create a new standard delivery order.",
+          "responses": {
+            "201": { "description": "Order created" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        },
+        "get": {
+          "tags": ["Orders v1"],
+          "summary": "List orders (v1)",
+          "description": "List your orders with pagination and optional status filter.",
+          "parameters": [
+            { "name": "status", "in": "query", "schema": { "type": "string" } },
+            { "name": "pageNumber", "in": "query", "schema": { "type": "integer" } },
+            { "name": "pageSize", "in": "query", "schema": { "type": "integer" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders/{orderId}": {
+        "get": {
+          "tags": ["Orders v1"],
+          "summary": "Get order detail (v1)",
+          "description": "Get full order detail by platform order ID.",
+          "parameters": [
+            { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        },
+        "put": {
+          "tags": ["Orders v1"],
+          "summary": "Update order (v1)",
+          "description": "Update an existing order.",
+          "parameters": [
+            { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "204": { "description": "Updated successfully" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        },
+        "delete": {
+          "tags": ["Orders v1"],
+          "summary": "Cancel order (v1)",
+          "description": "Cancel an order.",
+          "parameters": [
+            { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "204": { "description": "Cancelled successfully" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders/references/{refId}": {
+        "get": {
+          "tags": ["Orders v1"],
+          "summary": "Get order by reference ID (v1)",
+          "description": "Look up order by your refId instead of platform orderId.",
+          "parameters": [
+            { "name": "refId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders/{orderId}/current-location": {
+        "get": {
+          "tags": ["Orders v1"],
+          "summary": "Get driver location",
+          "description": "Live driver location for an active order.",
+          "parameters": [
+            { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders/{orderId}/events": {
+        "get": {
+          "tags": ["Orders v1"],
+          "summary": "Get order events",
+          "description": "Full event history of the order.",
+          "parameters": [
+            { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders/verify": {
+        "post": {
+          "tags": ["Orders v1"],
+          "summary": "Verify order event",
+          "description": "Verify an order event (driver arrived at pickup, picked up, ready for pickup).",
+          "responses": {
+            "204": { "description": "Verified successfully" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders/verify/picked-up/{refId}": {
+        "post": {
+          "tags": ["Orders v1"],
+          "summary": "Verify picked up by refId",
+          "description": "Shortcut: mark an order as verified-picked-up using your refId.",
+          "parameters": [
+            { "name": "refId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "204": { "description": "Verified successfully" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/customers/verify-pickup-code": {
+        "post": {
+          "tags": ["Orders v1"],
+          "summary": "Verify pickup code",
+          "description": "Verify a pickup code handed to the driver (POP).",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/orders/number-masking": {
+        "post": {
+          "tags": ["Orders v1"],
+          "summary": "Apply phone number masking",
+          "description": "Apply phone number masking on an order terminal.",
+          "responses": {
+            "204": { "description": "Masking applied successfully" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v2/orders": {
+        "post": {
+          "tags": ["Orders v2"],
+          "summary": "Create order (v2)",
+          "description": "Create an order (Classic or Same-day, chosen by deliveryCategory).",
+          "responses": {
+            "201": { "description": "Order created" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v2/orders/{orderId}": {
+        "get": {
+          "tags": ["Orders v2"],
+          "summary": "Get order detail (v2)",
+          "description": "Get full order detail by platform order ID.",
+          "parameters": [
+            { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v2/orders/references/{refId}": {
+        "get": {
+          "tags": ["Orders v2"],
+          "summary": "Get order by reference ID (v2)",
+          "description": "Get order detail by your reference ID.",
+          "parameters": [
+            { "name": "refId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/sdd/timelines": {
+        "post": {
+          "tags": ["NXP v1"],
+          "summary": "Get Same-day timelines",
+          "description": "Returns the time slots you can pick for pickup and delivery on the same day.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/sizes/{delivery_type}": {
+        "get": {
+          "tags": ["NXP v1"],
+          "summary": "List parcel sizes",
+          "description": "List parcel sizes for a delivery type (standard or same-day).",
+          "parameters": [
+            { "name": "delivery_type", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/timelines": {
+        "post": {
+          "tags": ["NXP v1"],
+          "summary": "Search standard timelines",
+          "description": "Search available time slots for standard delivery.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/bundles": {
+        "get": {
+          "tags": ["NXP v1"],
+          "summary": "List bundles",
+          "description": "List your ongoing bundles.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/orders/invoice": {
+        "post": {
+          "tags": ["NXP v1"],
+          "summary": "Get NXP order invoice",
+          "description": "Get a price quote and token for an NXP order.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/orders": {
+        "post": {
+          "tags": ["NXP v1"],
+          "summary": "Create NXP order",
+          "description": "Create a sender/parcel shipping order.",
+          "responses": {
+            "201": { "description": "Order created" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        },
+        "get": {
+          "tags": ["NXP v1"],
+          "summary": "Search sender orders",
+          "description": "Search your sender orders with filters and pagination.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/orders/{orderId}/transactions": {
+        "post": {
+          "tags": ["NXP v1"],
+          "summary": "Pay NXP order",
+          "description": "Pay the NXP order from your Snapp Box wallet.",
+          "parameters": [
+            { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/parcels": {
+        "get": {
+          "tags": ["NXP v1"],
+          "summary": "Search parcels",
+          "description": "Search parcels with filters (status, tracking code, terminal IDs).",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/parcels/labels": {
+        "get": {
+          "tags": ["NXP v1"],
+          "summary": "Download parcel labels",
+          "description": "Download parcel barcode labels as an HTML page for printing.",
+          "responses": {
+            "200": { "description": "HTML response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/parcels/{id}": {
+        "delete": {
+          "tags": ["NXP v1"],
+          "summary": "Cancel sender parcel",
+          "description": "Cancel a sender parcel.",
+          "parameters": [
+            { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "204": { "description": "Cancelled successfully" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/nxp/transactions": {
+        "get": {
+          "tags": ["NXP v1"],
+          "summary": "List payment transactions",
+          "description": "List payment transactions with filters.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/customers/favorite-address": {
+        "post": {
+          "tags": ["Customers & Addresses"],
+          "summary": "Save favorite address",
+          "description": "Save a new favorite address.",
+          "responses": {
+            "201": { "description": "Created successfully" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        },
+        "get": {
+          "tags": ["Customers & Addresses"],
+          "summary": "List favorite addresses",
+          "description": "List saved favorite addresses.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/wallets": {
+        "get": {
+          "tags": ["Wallets & Insurance"],
+          "summary": "Get wallet balance",
+          "description": "Get your current wallet balance.",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      },
+      "/v1/insurances": {
+        "get": {
+          "tags": ["Wallets & Insurance"],
+          "summary": "List insurance options",
+          "description": "List available insurance options (package value tiers and their cost).",
+          "responses": {
+            "200": { "description": "Successful response" }
+          },
+          "security": [{ "BearerAuth": [] }]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "BearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    }
+  }

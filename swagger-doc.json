@@ -1,0 +1,1256 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "Snapp Box API Reference",
+      "version": "1.0.0",
+      "description": "API reference for external partners building clients against this gateway. Think of this service as the front desk of Snapp Box.[cite: 1]"
+    },
+    "servers": [
+      {
+        "url": "https://{HOST}",
+        "description": "Contact SnappBox Support to obtain the correct Base URL for the service.[cite: 1]",
+        "variables": {
+          "HOST": {
+            "default": "api.snappbox.ir",
+            "description": "Contact support for actual host[cite: 1]"
+          }
+        }
+      }
+    ],
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "paths": {
+      "/v1/oauth2/token": {
+        "post": {
+          "summary": "Get access token",
+          "description": "Exchange client credentials for an access token. No auth header needed for this one call.[cite: 1]",
+          "security": [],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["client_id", "client_secret"],
+                  "properties": {
+                    "client_id": {
+                      "type": "string",
+                      "description": "Your issued client ID[cite: 1]"
+                    },
+                    "client_secret": {
+                      "type": "string",
+                      "description": "Your issued client secret[cite: 1]"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful token response[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "access_token": { "type": "string" },
+                      "token_type": { "type": "string", "example": "Bearer" },
+                      "expires_in": { "type": "integer", "example": 3600 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/delivery-categories": {
+        "get": {
+          "summary": "List delivery categories",
+          "description": "List delivery categories available for a location. All query parameters are mandatory.[cite: 1]",
+          "parameters": [
+            {
+              "name": "latitude",
+              "in": "query",
+              "required": true,
+              "schema": { "type": "number", "example": 35.757523 }
+            },
+            {
+              "name": "longitude",
+              "in": "query",
+              "required": true,
+              "schema": { "type": "number", "example": 51.409911 }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "city": { "type": "string", "example": "tehran" },
+                      "deliveryCategories": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["bike", "bike-without-box"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/pricing": {
+        "post": {
+          "summary": "Get v1 price quote",
+          "description": "Get a price quote for a standard order before creating it. Mirrors the create-order shape.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderCreateRequest" }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Pricing quote[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/PricingResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v2/pricing": {
+        "post": {
+          "summary": "Get v2 price quote",
+          "description": "There is also a v2 pricing endpoint at POST /v2/pricing with the same purpose for the v2 order flow.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderCreateRequestV2" }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Pricing quote[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/PricingResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders": {
+        "post": {
+          "summary": "Create v1 order",
+          "description": "Create a new delivery order. This is the core endpoint.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderCreateRequest" }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Order created successfully[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/OrderCreateResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/{orderId}": {
+        "get": {
+          "summary": "Get v1 order detail",
+          "description": "Get full order detail: status, terminals, driver, tracking URL.[cite: 1]",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/OrderDetail" }
+                }
+              }
+            }
+          }
+        },
+        "put": {
+          "summary": "Update v1 order",
+          "description": "Update an existing order. Caution: orders can be updated only after the ACCEPTED state and just before the PICKED_UP state.[cite: 1]",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Update fields (payment type, waiting time, terminals, packages, time slot).[cite: 1]",
+                  "properties": {
+                    "paymentType": { "type": "string" },
+                    "waitingTime": { "type": "integer" },
+                    "terminals": { "type": "array", "items": { "type": "object" } },
+                    "packages": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": { "description": "Success with no body[cite: 1]" }
+          }
+        },
+        "delete": {
+          "summary": "Cancel v1 order",
+          "description": "Cancel an order. Returns 204 on success.[cite: 1]",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "204": { "description": "Success[cite: 1]" }
+          }
+        }
+      },
+      "/v1/orders/references/{refId}": {
+        "get": {
+          "summary": "Get order by reference",
+          "description": "Same as above, but look up by your refId instead of platform orderId. Response shape is identical.[cite: 1]",
+          "parameters": [
+            {
+              "name": "refId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/OrderDetail" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/list": {
+        "get": {
+          "summary": "List orders",
+          "description": "List your orders with pagination and optional status filter.[cite: 1]",
+          "parameters": [
+            {
+              "name": "status",
+              "in": "query",
+              "required": false,
+              "schema": { "type": "string", "example": "DELIVERED" }
+            },
+            {
+              "name": "pageNumber",
+              "in": "query",
+              "required": false,
+              "schema": { "type": "integer", "example": 1 }
+            },
+            {
+              "name": "pageSize",
+              "in": "query",
+              "required": false,
+              "schema": { "type": "integer", "example": 10 }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Array of order detail objects[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/OrderListDetail" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/{orderId}/current-location": {
+        "get": {
+          "summary": "Get current location",
+          "description": "Live driver location for an active order.[cite: 1]",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Coordinates[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "latitude": { "type": "number", "example": 35.757523 },
+                      "longitude": { "type": "number", "example": 51.409911 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/{orderId}/events": {
+        "get": {
+          "summary": "Get order events",
+          "description": "Full event history of the order (created, accepted, picked up, delivered...).[cite: 1]",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Event history[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": { "type": "string" },
+                        "actionAt": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/orders/verify": {
+        "post": {
+          "summary": "Verify order event",
+          "description": "Verify an order event (driver arrived at pickup, picked up, ready for pickup).[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["orderId", "customerRefId", "verificationType"],
+                  "properties": {
+                    "orderId": { "type": "string", "description": "Platform order ID[cite: 1]" },
+                    "customerRefId": { "type": "string", "description": "Your refId[cite: 1]" },
+                    "verificationType": { "type": "string", "description": "ARRIVED_AT_PICKUP, PICKED_UP, or READY_FOR_PICKUP[cite: 1]" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": { "description": "Success[cite: 1]" }
+          }
+        }
+      },
+      "/v1/orders/verify/picked-up/{refId}": {
+        "post": {
+          "summary": "Shortcut mark picked up",
+          "description": "Shortcut: mark an order as verified-picked-up using your refId. Returns 204.[cite: 1]",
+          "parameters": [
+            {
+              "name": "refId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "204": { "description": "Success[cite: 1]" }
+          }
+        }
+      },
+      "/v1/customers/verify-pickup-code": {
+        "post": {
+          "summary": "Verify pickup code",
+          "description": "Verify a pickup code handed to the driver. Requires rollout.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["pickupCode", "terminalId"],
+                  "properties": {
+                    "pickupCode": { "type": "string" },
+                    "terminalId": { "type": "string" },
+                    "customerRefId": { "type": "string" },
+                    "orderId": { "type": "string", "description": "Required(Only if you don't send customerRefId)[cite: 1]" },
+                    "referenceOrderId": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": { "description": "Success[cite: 1]" }
+          }
+        }
+      },
+      "/v1/orders/number-masking": {
+        "post": {
+          "summary": "Number masking",
+          "description": "Apply phone number masking on an order terminal. Returns 204.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["orderId", "terminalId"],
+                  "properties": {
+                    "orderId": { "type": "string" },
+                    "terminalId": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": { "description": "Success[cite: 1]" }
+          }
+        }
+      },
+      "/v2/orders": {
+        "post": {
+          "summary": "Create v2 order",
+          "description": "Create an order (Classic or Same-day, chosen by deliveryCategory).[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderCreateRequestV2" }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Order created successfully[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "orderId": { "type": "string" },
+                      "refId": { "type": "string" },
+                      "status": { "type": "string" },
+                      "price": { "type": "number" },
+                      "createdTime": { "type": "string" },
+                      "terminalIds": { "type": "array", "items": { "type": "integer" } },
+                      "packages": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "verification_code": { "type": "string" },
+                            "pod_code": { "type": "integer" },
+                            "tracking_code": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v2/orders/{orderId}": {
+        "get": {
+          "summary": "Get v2 order detail",
+          "description": "Get full order detail by platform order ID.[cite: 1]",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/OrderDetail" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v2/orders/references/{refId}": {
+        "get": {
+          "summary": "Get v2 order by reference",
+          "description": "Get order detail by your reference ID.[cite: 1]",
+          "parameters": [
+            {
+              "name": "refId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Order detail[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "$ref": "#/components/schemas/OrderDetail" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/sdd/timelines": {
+        "post": {
+          "summary": "NXP Same-day timelines",
+          "description": "Returns the time slots you can pick for pickup and delivery on the same day.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["parcels", "sender_terminal_id"],
+                  "properties": {
+                    "parcels": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "required": ["size"],
+                        "properties": {
+                          "size": { "$ref": "#/components/schemas/Size" }
+                        }
+                      }
+                    },
+                    "sender_terminal_id": { "type": "string", "description": "Format fav_id:<id>[cite: 1]" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Available timelines[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "status": { "type": "string" },
+                        "day": { "type": "string", "format": "date" },
+                        "start_time": { "type": "string" },
+                        "end_time": { "type": "string" },
+                        "reserved_count": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/sizes/{delivery_type}": {
+        "get": {
+          "summary": "List parcel sizes",
+          "description": "List parcel sizes for a delivery type (standard or same-day).[cite: 1]",
+          "parameters": [
+            {
+              "name": "delivery_type",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string", "enum": ["standard", "same-day"] }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of sizes[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer" },
+                        "key": { "type": "string" },
+                        "title": { "type": "string" },
+                        "delivery_type": { "type": "string" },
+                        "capacity": { "type": "number" },
+                        "width": { "type": "number" },
+                        "height": { "type": "number" },
+                        "depth": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/timelines": {
+        "post": {
+          "summary": "Search standard timelines",
+          "description": "Search available time slots for standard delivery.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["parcels"],
+                  "properties": {
+                    "parcels": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "$ref": "#/components/schemas/NxpParcelRequest" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Available slots[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "pickup_timeslot": { "type": "object" },
+                        "delivery_timeslot": { "type": "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/bundles": {
+        "get": {
+          "summary": "List NXP bundles",
+          "description": "Optional. List your bundles.[cite: 1]",
+          "parameters": [
+            {
+              "name": "bundle_status",
+              "in": "query",
+              "required": true,
+              "schema": { "type": "string" }
+            },
+            {
+              "name": "sender_terminal_id",
+              "in": "query",
+              "required": true,
+              "schema": { "type": "string" }
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "required": false,
+              "schema": { "type": "integer" }
+            },
+            {
+              "name": "page_size",
+              "in": "query",
+              "required": false,
+              "schema": { "type": "integer" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of bundles[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "code": { "type": "string" },
+                        "parcels_count": { "type": "integer" },
+                        "pickup_timeslot": { "type": "object" },
+                        "sender_terminal": { "type": "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/orders/invoice": {
+        "post": {
+          "summary": "Get NXP price quote",
+          "description": "Get a price quote. Same body as create order. Returns pricing + token.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reference": { "type": "string" },
+                    "parcels": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/NxpCreateParcelReq" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Invoice response[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "total": { "type": "number" },
+                      "token": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/orders": {
+        "post": {
+          "summary": "Create NXP order",
+          "description": "Create the order.[cite: 1]",
+          "parameters": [
+            {
+              "name": "X-Idempotency-Key",
+              "in": "header",
+              "required": true,
+              "schema": { "type": "string", "description": "Unique uuid[cite: 1]" }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["invoice_token", "parcels"],
+                  "properties": {
+                    "invoice_token": { "type": "string", "description": "Token from invoice response[cite: 1]" },
+                    "parcels": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "$ref": "#/components/schemas/NxpCreateParcelReq" }
+                    },
+                    "reference": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Order created[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "string" },
+                      "status": { "type": "string" },
+                      "amount": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "Search NXP orders",
+          "description": "Search your sender orders with filters and pagination.[cite: 1]",
+          "parameters": [
+            { "name": "statuses", "in": "query", "schema": { "type": "string" } },
+            { "name": "page", "in": "query", "schema": { "type": "integer" } },
+            { "name": "page_size", "in": "query", "schema": { "type": "integer" } }
+          ],
+          "responses": {
+            "200": {
+              "description": "Array of NXP orders[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "status": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/orders/{orderId}/transactions": {
+        "post": {
+          "summary": "Pay NXP order",
+          "description": "Pay the order from your Snapp Box wallet.[cite: 1]",
+          "parameters": [
+            {
+              "name": "orderId",
+              "in": "path",
+              "required": true,
+              "schema": { "type": "string" }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Payment response[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "url": { "type": "string" },
+                      "paid": { "type": "boolean" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/parcels": {
+        "get": {
+          "summary": "Search parcels",
+          "description": "Search parcels with many filters.[cite: 1]",
+          "parameters": [
+            { "name": "tracking_code", "in": "query", "schema": { "type": "string" } },
+            { "name": "page", "in": "query", "schema": { "type": "integer" } }
+          ],
+          "responses": {
+            "200": {
+              "description": "Parcels list[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/parcels/labels": {
+        "get": {
+          "summary": "Download labels",
+          "description": "Download parcel barcode labels as an HTML page for printing.[cite: 1]",
+          "parameters": [
+            { "name": "order_id", "in": "query", "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": {
+              "description": "HTML response[cite: 1]",
+              "content": {
+                "text/html": { "schema": { "type": "string" } }
+              }
+            }
+          }
+        }
+      },
+      "/v1/nxp/parcels/{id}": {
+        "delete": {
+          "summary": "Cancel sender parcel",
+          "description": "Cancel a sender parcel. Returns 204 with no body on success.[cite: 1]",
+          "parameters": [
+            { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reason_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "204": { "description": "Success[cite: 1]" }
+          }
+        }
+      },
+      "/v1/nxp/transactions": {
+        "get": {
+          "summary": "List NXP transactions",
+          "description": "List payment transactions with filters.[cite: 1]",
+          "parameters": [
+            { "name": "order_id", "in": "query", "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": {
+              "description": "Transactions list[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "transaction_id": { "type": "string" },
+                        "status": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/customers/favorite-address": {
+        "post": {
+          "summary": "Save favorite address",
+          "description": "Save a new favorite address.[cite: 1]",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["name", "contactName", "contactPhoneNumber", "latitude", "longitude", "address"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "contactName": { "type": "string" },
+                    "contactPhoneNumber": { "type": "string" },
+                    "latitude": { "type": "string" },
+                    "longitude": { "type": "string" },
+                    "address": { "type": "string" },
+                    "plate": { "type": "string" },
+                    "unit": { "type": "string" },
+                    "comment": { "type": "string" },
+                    "defaultAddress": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Address created[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "List favorite addresses",
+          "description": "List saved favorite addresses.[cite: 1]",
+          "responses": {
+            "200": {
+              "description": "List of addresses[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/wallets": {
+        "get": {
+          "summary": "Get wallet balance",
+          "description": "Get your current wallet balance.[cite: 1]",
+          "responses": {
+            "200": {
+              "description": "Wallet balance[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "balance": { "type": "number" },
+                      "currency": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/v1/insurances": {
+        "get": {
+          "summary": "List insurance options",
+          "description": "List available insurance options (package value tiers and their cost).[cite: 1]",
+          "parameters": [
+            { "name": "city", "in": "query", "schema": { "type": "string" } },
+            { "name": "deliveryCategory", "in": "query", "schema": { "type": "string" } }
+          ],
+          "responses": {
+            "200": {
+              "description": "Insurance options[cite: 1]",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "city": { "type": "string" },
+                      "deliveryCategory": { "type": "string" },
+                      "packageValues": {
+                        "type": "array",
+                        "items": { "type": "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "description": "Every protected call needs Authorization: Bearer <token>[cite: 1]"
+        }
+      },
+      "schemas": {
+        "Error": {
+          "type": "object",
+          "properties": {
+            "key": { "type": "string" },
+            "message": { "type": "string" },
+            "statusCode": { "type": "string" }
+          },
+          "description": "Every failed call returns the same JSON shape[cite: 1]"
+        },
+        "Size": {
+          "type": "object",
+          "required": ["type", "value"],
+          "properties": {
+            "type": { "type": "string", "description": "category or dimension or slug[cite: 1]" },
+            "value": { "type": "string", "description": "category size ID, dimension string L,W,H, or slug ID[cite: 1]" }
+          }
+        },
+        "Terminal": {
+          "type": "object",
+          "required": ["latitude", "longitude", "type", "reference", "phoneNumber"],
+          "properties": {
+            "latitude": { "type": "string" },
+            "longitude": { "type": "string" },
+            "type": { "type": "string", "description": "pickup or drop[cite: 1]" },
+            "reference": { "type": "string", "description": "Numeric string, defines stop order. e.g. '1'[cite: 1]" },
+            "phoneNumber": { "type": "string", "description": "Contact phone[cite: 1]" },
+            "address": { "type": "string" },
+            "contactName": { "type": "string" },
+            "comment": { "type": "string" }
+          }
+        },
+        "OrderCreateRequest": {
+          "type": "object",
+          "required": ["refId", "terminals", "deliveryCategory", "paymentType"],
+          "properties": {
+            "refId": { "type": "string", "description": "Your unique business reference (idempotency key)[cite: 1]" },
+            "terminals": { "type": "array", "items": { "$ref": "#/components/schemas/Terminal" } },
+            "deliveryCategory": { "type": "string" },
+            "paymentType": { "type": "string", "description": "Only prepaid, cod, postpaid[cite: 1]" },
+            "city": { "type": "string" },
+            "packages": { "type": "array", "items": { "type": "object" } },
+            "totalPackageSize": { "type": "number" },
+            "waitingTime": { "type": "integer" },
+            "voucherCode": { "type": "string" },
+            "hasReturn": { "type": "boolean" },
+            "startTime": { "type": "string", "format": "date-time" },
+            "endTime": { "type": "string", "format": "date-time" },
+            "podEnabled": { "type": "boolean" },
+            "popEnabled": { "type": "boolean" }
+          }
+        },
+        "OrderCreateRequestV2": {
+          "type": "object",
+          "required": ["terminals", "deliveryCategory", "paymentType"],
+          "properties": {
+            "refId": { "type": "string", "description": "Optional (Required for Same-day)[cite: 1]" },
+            "terminals": { "type": "array", "items": { "$ref": "#/components/schemas/Terminal" } },
+            "deliveryCategory": { "type": "string", "description": "same-day, bike-without-box[cite: 1]" },
+            "paymentType": { "type": "string" },
+            "city": { "type": "string" },
+            "timeSlot": { "type": "object", "description": "Required for Same-day[cite: 1]" },
+            "packages": { "type": "array", "items": { "type": "object" }, "description": "Required for Same-day[cite: 1]" },
+            "features": { "type": "object" },
+            "totalPackageSize": { "type": "number" },
+            "waitingTime": { "type": "integer" },
+            "voucherCode": { "type": "string" },
+            "hasReturn": { "type": "boolean" },
+            "startTime": { "type": "string", "format": "date-time" },
+            "endTime": { "type": "string", "format": "date-time" },
+            "podEnabled": { "type": "boolean" },
+            "popEnabled": { "type": "boolean" }
+          }
+        },
+        "OrderCreateResponse": {
+          "type": "object",
+          "properties": {
+            "orderId": { "type": "string" },
+            "refId": { "type": "string" },
+            "status": { "type": "string", "description": "PENDING, ACCEPTED, PICKED_UP, DELIVERED, CANCELLED[cite: 1]" },
+            "price": { "type": "number" },
+            "createdTime": { "type": "string", "format": "date-time" },
+            "terminalIds": { "type": "array", "items": { "type": "integer" } }
+          }
+        },
+        "PricingResponse": {
+          "type": "object",
+          "properties": {
+            "totalFare": { "type": "number" },
+            "finalCustomerFare": { "type": "number" },
+            "distance": { "type": "number" },
+            "eta": { "type": "integer" },
+            "pricingId": { "type": "string" }
+          }
+        },
+        "OrderDetail": {
+          "type": "object",
+          "properties": {
+            "orderId": { "type": "string" },
+            "refId": { "type": "string" },
+            "status": { "type": "string" },
+            "deliveryCategory": { "type": "string" },
+            "paymentType": { "type": "string" },
+            "price": { "type": "number" },
+            "terminals": { "type": "array", "items": { "type": "object" } },
+            "allotment": { "type": "object" }
+          }
+        },
+        "OrderListDetail": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "customerRefId": { "type": "string" },
+            "status": { "type": "string" },
+            "price": { "type": "number" }
+          }
+        },
+        "NxpParcelRequest": {
+          "type": "object",
+          "required": ["size", "sender_terminal_id"],
+          "properties": {
+            "size": { "$ref": "#/components/schemas/Size" },
+            "sender_terminal_id": { "type": "string", "description": "e.g. fav_id:456[cite: 1]" },
+            "receiver_terminal": { "type": "object", "description": "Full receiver address object[cite: 1]" },
+            "receiver_terminal_id": { "type": "string", "description": "Either receiver_terminal OR receiver_terminal_id must be provided[cite: 1]" }
+          }
+        },
+        "NxpCreateParcelReq": {
+          "type": "object",
+          "required": ["timeline_id", "sender_terminal_id", "size"],
+          "properties": {
+            "timeline_id": { "type": "string" },
+            "sender_terminal_id": { "type": "string" },
+            "size": { "$ref": "#/components/schemas/Size" },
+            "receiver_terminal": { "type": "object" },
+            "receiver_terminal_id": { "type": "string" },
+            "pickup_type": { "type": "string" },
+            "value": { "type": "integer" },
+            "breakable": { "type": "boolean" },
+            "packaging": { "type": "boolean" }
+          },
+          "description": "CreateParcelReq object. Receiver info requires either receiver_terminal or receiver_terminal_id.[cite: 1]"
+        }
+      }
+    }
+  }
